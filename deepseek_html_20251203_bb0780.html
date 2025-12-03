@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>吸入式关闭动效</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .trigger-button {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            font-size: 18px;
+            border-radius: 50px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 0 auto 40px;
+            box-shadow: 0 10px 20px rgba(106, 17, 203, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .trigger-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px rgba(106, 17, 203, 0.3);
+        }
+
+        .trigger-button:active {
+            transform: translateY(0);
+        }
+
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .demo-card {
+            background: white;
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .demo-card h3 {
+            color: #444;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .demo-card h3 i {
+            color: #6a11cb;
+        }
+
+        .demo-card button {
+            width: 100%;
+            margin-top: 15px;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .demo-card button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        /* 弹框样式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: white;
+            padding: 0;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            max-width: 500px;
+            width: 90%;
+            position: relative;
+            transform-origin: center center;
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 25px 30px;
+            position: relative;
+        }
+
+        .modal-header h2 {
+            font-size: 1.8em;
+            font-weight: 600;
+        }
+
+        .modal-header .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-header .close-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(90deg);
+        }
+
+        .modal-body {
+            padding: 30px;
+            line-height: 1.6;
+            color: #555;
+        }
+
+        .modal-footer {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-top: 1px solid #eee;
+            text-align: right;
+        }
+
+        .modal-footer button {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .modal-footer .confirm-btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            margin-right: 10px;
+        }
+
+        .modal-footer .cancel-btn {
+            background: #e9ecef;
+            color: #666;
+        }
+
+        .modal-footer button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 吸入动画关键帧 */
+        @keyframes suckToPoint {
+            0% {
+                transform: scale(1) translate(0, 0);
+                opacity: 1;
+                border-radius: 20px;
+            }
+            70% {
+                opacity: 0.3;
+            }
+            100% {
+                transform: scale(0.01) translate(var(--target-x), var(--target-y));
+                opacity: 0;
+                border-radius: 50%;
+            }
+        }
+
+        .modal.sucking {
+            animation: suckToPoint 0.6s cubic-bezier(0.7, 0, 0.3, 1) forwards;
+            pointer-events: none;
+        }
+
+        .overlay-fade-out {
+            animation: fadeOut 0.3s ease forwards;
+        }
+
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                backdrop-filter: blur(0);
+            }
+        }
+
+        /* 效果说明 */
+        .explanation {
+            background: white;
+            margin-top: 40px;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: left;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
+        }
+
+        .explanation h3 {
+            color: #444;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .explanation ul {
+            list-style: none;
+            padding-left: 5px;
+        }
+
+        .explanation li {
+            padding: 10px 0;
+            color: #666;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .explanation li:last-child {
+            border-bottom: none;
+        }
+
+        .explanation li i {
+            color: #4facfe;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>吸入式关闭动效演示</h1>
+        <p class="subtitle">点击按钮打开弹框，然后点击关闭按钮体验"吸入"效果</p>
+        
+        <button class="trigger-button" id="openModalBtn">
+            <i class="fas fa-magic"></i>
+            打开弹框
+        </button>
+
+        <div class="demo-grid">
+            <div class="demo-card">
+                <h3><i class="fas fa-bullseye"></i> 精准定位</h3>
+                <p>弹框会精确收缩到触发关闭的元素位置，提供清晰的视觉反馈</p>
+                <button onclick="openModal(this)">从此处打开</button>
+            </div>
+            
+            <div class="demo-card">
+                <h3><i class="fas fa-compress-alt"></i> 物理模拟</h3>
+                <p>模拟纸张被吸入的效果，带有形变和轨迹动画</p>
+                <button onclick="openModal(this)">从此处打开</button>
+            </div>
+            
+            <div class="demo-card">
+                <h3><i class="fas fa-hand-pointer"></i> 交互增强</h3>
+                <p>提供直观的操作反馈，提升用户体验</p>
+                <button onclick="openModal(this)">从此处打开</button>
+            </div>
+        </div>
+
+        <!-- 弹框结构 -->
+        <div class="modal-overlay" id="modalOverlay">
+            <div class="modal" id="modal">
+                <div class="modal-header">
+                    <h2>✨ 吸入式关闭演示</h2>
+                    <button class="close-btn" id="closeBtn" title="点击关闭体验吸入效果">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>这是一个带有"吸入式关闭"动效的弹框。</p>
+                    <p><strong>体验方式：</strong></p>
+                    <p>1. 点击右上角的关闭按钮 ✕</p>
+                    <p>2. 观察弹框如何像纸张一样被吸入到按钮中</p>
+                    <p>3. 动画完成后弹框完全消失</p>
+                    <p>这种动效提供了清晰的视觉反馈，让用户明确知道关闭操作的关联性。</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="confirm-btn">确认操作</button>
+                    <button class="cancel-btn" id="cancelBtn">取消</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="explanation">
+            <h3><i class="fas fa-info-circle"></i> 技术实现要点</h3>
+            <ul>
+                <li><i class="fas fa-code"></i> 使用CSS <code>transform-origin</code>控制缩放中心点</li>
+                <li><i class="fas fa-bullseye"></i> 动态计算弹框到目标元素的相对位置</li>
+                <li><i class="fas fa-film"></i> 应用<code>cubic-bezier</code>缓动函数模拟物理效果</li>
+                <li><i class="fas fa-shapes"></i> 结合缩放、平移、圆角变化实现"纸张吸入"效果</li>
+                <li><i class="fas fa-mouse-pointer"></i> 通过事件委托支持从多个触发点打开</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const modalOverlay = document.getElementById('modalOverlay');
+        const modal = document.getElementById('modal');
+        const openModalBtn = document.getElementById('openModalBtn');
+        const closeBtn = document.getElementById('closeBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        let lastTriggerElement = null;
+
+        // 打开弹框
+        function openModal(triggerElement = openModalBtn) {
+            lastTriggerElement = triggerElement;
+            modalOverlay.classList.add('active');
+            modal.classList.remove('sucking');
+            
+            // 重置样式
+            modal.style.setProperty('--target-x', '0px');
+            modal.style.setProperty('--target-y', '0px');
+            modal.style.transform = 'scale(1)';
+            modal.style.opacity = '1';
+        }
+
+        // 关闭弹框（带吸入动画）
+        function closeModalWithSuck(targetElement) {
+            if (!targetElement) return;
+            
+            // 获取弹框和目标元素的坐标
+            const modalRect = modal.getBoundingClientRect();
+            const targetRect = targetElement.getBoundingClientRect();
+            
+            // 计算弹框中心点到目标元素中心点的偏移量
+            const modalCenterX = modalRect.left + modalRect.width / 2;
+            const modalCenterY = modalRect.top + modalRect.height / 2;
+            const targetCenterX = targetRect.left + targetRect.width / 2;
+            const targetCenterY = targetRect.top + targetRect.height / 2;
+            
+            // 计算相对位移（确保最终重合）
+            const deltaX = targetCenterX - modalCenterX;
+            const deltaY = targetCenterY - modalCenterY;
+            
+            // 设置CSS自定义属性，用于动画
+            modal.style.setProperty('--target-x', `${deltaX}px`);
+            modal.style.setProperty('--target-y', `${deltaY}px`);
+            
+            // 添加吸入动画
+            modal.classList.add('sucking');
+            modalOverlay.classList.add('overlay-fade-out');
+            
+            // 动画结束后移除弹框
+            setTimeout(() => {
+                modalOverlay.classList.remove('active');
+                modal.classList.remove('sucking');
+                modalOverlay.classList.remove('overlay-fade-out');
+                modal.style.transform = 'scale(1)';
+                modal.style.opacity = '1';
+            }, 600);
+        }
+
+        // 事件监听
+        openModalBtn.addEventListener('click', () => openModal(openModalBtn));
+
+        closeBtn.addEventListener('click', (e) => {
+            closeModalWithSuck(e.currentTarget);
+        });
+
+        cancelBtn.addEventListener('click', () => {
+            closeModalWithSuck(lastTriggerElement);
+        });
+
+        // 点击遮罩层关闭（吸回到打开按钮）
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) {
+                closeModalWithSuck(lastTriggerElement);
+            }
+        });
+
+        // 键盘支持
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modalOverlay.classList.contains('active')) {
+                closeModalWithSuck(lastTriggerElement);
+            }
+        });
+
+        // 为演示卡片按钮添加事件
+        document.querySelectorAll('.demo-card button').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                openModal(this);
+            });
+        });
+    </script>
+</body>
+</html>
